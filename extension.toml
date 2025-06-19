@@ -1,0 +1,9 @@
+id = "go-gin-snippets"
+name = "Go gin Snippets"
+version = "0.1.0"
+schema_version = 1
+authors = ["RajaSunrise <indra020204@gmail.com>"]
+description = "Go gin snippets for Zed IDE."
+repository = "https://github.com/NarmadaWeb/go-gin-snippets"
+
+snippets = "./snippets/go.json"
