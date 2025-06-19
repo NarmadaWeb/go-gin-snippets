@@ -1,0 +1,666 @@
+{
+  "Gin Import Package": {
+    "prefix": "gin-import",
+    "body": [
+      "import (",
+      "\t\"github.com/gin-gonic/gin\"",
+      "\t\"net/http\"",
+      "\t\"log\"",
+      ")"
+    ],
+    "description": "Basic Gin package imports"
+  },
+  
+  "Basic Gin Engine": {
+    "prefix": "gin-engine",
+    "body": [
+      "router := gin.Default()",
+      "router.Run(\":$1\")"
+    ],
+    "description": "Initialize basic Gin engine"
+  },
+  
+  "GET Handler": {
+    "prefix": "gin-get",
+    "body": [
+      "router.GET(\"/$1\", func(c *gin.Context) {",
+      "\tc.JSON(http.StatusOK, gin.H{\"message\": \"$2\"})",
+      "})"
+    ],
+    "description": "Handler for GET route"
+  },
+  
+  "POST Handler with JSON Binding": {
+    "prefix": "gin-post",
+    "body": [
+      "router.POST(\"/$1\", func(c *gin.Context) {",
+      "\tvar req ${2:any}",
+      "\tif err := c.ShouldBindJSON(&req); err != nil {",
+      "\t\tc.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})",
+      "\t\treturn",
+      "\t}",
+      "\tc.JSON(http.StatusCreated, req)",
+      "})"
+    ],
+    "description": "POST handler with JSON binding"
+  },
+  
+  "Path Parameter": {
+    "prefix": "gin-param",
+    "body": [
+      "router.GET(\"/$1/:id\", func(c *gin.Context) {",
+      "\tid := c.Param(\"id\")",
+      "\tc.JSON(http.StatusOK, gin.H{\"id\": id})",
+      "})"
+    ],
+    "description": "Extract path parameter"
+  },
+  
+  "Query Parameters": {
+    "prefix": "gin-query",
+    "body": [
+      "router.GET(\"/$1\", func(c *gin.Context) {",
+      "\tname := c.Query(\"name\")",
+      "\tage := c.DefaultQuery(\"age\", \"$2\")",
+      "\tc.JSON(http.StatusOK, gin.H{\"name\": name, \"age\": age})",
+      "})"
+    ],
+    "description": "Extract query parameters"
+  },
+  
+  "Custom Middleware": {
+    "prefix": "gin-middleware",
+    "body": [
+      "func ${1:MiddlewareName}() gin.HandlerFunc {",
+      "\treturn func(c *gin.Context) {",
+      "\t\tlog.Println(\"Middleware executed\")",
+      "\t\tc.Next()",
+      "\t\tlog.Println(\"Status:\", c.Writer.Status())",
+      "\t}",
+      "}"
+    ],
+    "description": "Create custom middleware"
+  },
+  
+  "Route Grouping": {
+    "prefix": "gin-group",
+    "body": [
+      "${1:v1} := router.Group(\"/$1\")",
+      "{",
+      "\t$1.GET(\"/$2\", ${3:handler})",
+      "\t$1.POST(\"/$4\", ${5:handler})",
+      "}"
+    ],
+    "description": "Create route group"
+  },
+  
+  "Basic Authentication": {
+    "prefix": "gin-basicauth",
+    "body": [
+      "authorized := router.Group(\"/admin\", gin.BasicAuth(gin.Accounts{",
+      "\t\"$1\": \"$2\", // user:password",
+      "}))"
+    ],
+    "description": "Basic authentication middleware"
+  },
+  
+  "File Upload": {
+    "prefix": "gin-upload",
+    "body": [
+      "router.POST(\"/upload\", func(c *gin.Context) {",
+      "\tfile, _ := c.FormFile(\"file\")",
+      "\tc.SaveUploadedFile(file, \"./uploads/\" + file.Filename)",
+      "\tc.JSON(http.StatusOK, gin.H{\"filename\": file.Filename})",
+      "})"
+    ],
+    "description": "File upload handler"
+  },
+  
+  "Static Files": {
+    "prefix": "gin-static",
+    "body": [
+      "router.Static(\"/$1\", \"./$2\")"
+    ],
+    "description": "Serve static files"
+  },
+  
+  "HTML Templates": {
+    "prefix": "gin-html",
+    "body": [
+      "router.LoadHTMLGlob(\"templates/*\")",
+      "router.GET(\"/$1\", func(c *gin.Context) {",
+      "\tc.HTML(http.StatusOK, \"$2.html\", gin.H{\"title\": \"$3\"})",
+      "})"
+    ],
+    "description": "Render HTML templates"
+  },
+  
+  "Redirect": {
+    "prefix": "gin-redirect",
+    "body": [
+      "router.GET(\"/$1\", func(c *gin.Context) {",
+      "\tc.Redirect(http.StatusMovedPermanently, \"/$2\")",
+      "})"
+    ],
+    "description": "Redirect request"
+  },
+  
+  "Custom Validator": {
+    "prefix": "gin-validator",
+    "body": [
+      "if v, ok := binding.Validator.Engine().(*validator.Validate); ok {",
+      "\tv.RegisterValidation(\"${1:rule}\", func(fl validator.FieldLevel) bool {",
+      "\t\treturn ${2:validationLogic}",
+      "\t})",
+      "}"
+    ],
+    "description": "Custom validation rule"
+  },
+  
+  "Graceful Shutdown": {
+    "prefix": "gin-graceful",
+    "body": [
+      "srv := &http.Server{",
+      "\tAddr:    \":$1\",",
+      "\tHandler: router,",
+      "}",
+      "",
+      "go func() {",
+      "\tif err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {",
+      "\t\tlog.Fatalf(\"listen: %s\\n\", err)",
+      "\t}",
+      "}()",
+      "",
+      "quit := make(chan os.Signal, 1)",
+      "signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)",
+      "<-quit",
+      "log.Println(\"Shutting down server...\")",
+      "",
+      "ctx, cancel := context.WithTimeout(context.Background(), ${2:5}*time.Second)",
+      "defer cancel()",
+      "if err := srv.Shutdown(ctx); err != nil {",
+      "\tlog.Fatal(\"Server forced to shutdown:\", err)",
+      "}",
+      "log.Println(\"Server exiting\")"
+    ],
+    "description": "Graceful server shutdown"
+  },
+  
+  "CORS Middleware": {
+    "prefix": "gin-cors",
+    "body": [
+      "func Cors() gin.HandlerFunc {",
+      "\treturn func(c *gin.Context) {",
+      "\t\tc.Writer.Header().Set(\"Access-Control-Allow-Origin\", \"*\")",
+      "\t\tc.Writer.Header().Set(\"Access-Control-Allow-Methods\", \"*\", )",
+      "\t\tc.Writer.Header().Set(\"Access-Control-Allow-Headers\", \"*\")",
+      "\t\t",
+      "\t\tif c.Request.Method == \"OPTIONS\" {",
+      "\t\t\tc.AbortWithStatus(204)",
+      "\t\t\treturn",
+      "\t\t}",
+      "\t\tc.Next()",
+      "\t}",
+      "}"
+    ],
+    "description": "CORS middleware"
+  },
+  
+  "JWT Authentication": {
+    "prefix": "gin-jwt",
+    "body": [
+      "func ${1:JWTMiddleware}() gin.HandlerFunc {",
+      "\treturn func(c *gin.Context) {",
+      "\t\ttokenString := c.GetHeader(\"Authorization\")",
+      "\t\tif tokenString == \"\" {",
+      "\t\t\tc.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{\"error\": \"Unauthorized\"})",
+      "\t\t\treturn",
+      "\t\t}",
+      "",
+      "\t\ttoken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {",
+      "\t\t\treturn []byte(\"${2:secret}\"), nil",
+      "\t\t})",
+      "",
+      "\t\tif claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {",
+      "\t\t\tc.Set(\"${3:userID}\", claims[\"sub\"])",
+      "\t\t} else {",
+      "\t\t\tc.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{\"error\": \"Invalid token\"})",
+      "\t\t}",
+      "\t\tc.Next()",
+      "\t}",
+      "}"
+    ],
+    "description": "JWT authentication middleware"
+  },
+  
+  "Global Error Handling": {
+    "prefix": "gin-error",
+    "body": [
+      "router.Use(func(c *gin.Context) {",
+      "\tc.Next()",
+      "\tif len(c.Errors) > 0 {",
+      "\t\tc.JSON(http.StatusInternalServerError, gin.H{\"errors\": c.Errors.Errors()})",
+      "\t}",
+      "})"
+    ],
+    "description": "Global error handler"
+  },
+  
+  "Struct Binding": {
+    "prefix": "gin-bind",
+    "body": [
+      "var ${1:input} ${2:structName}",
+      "if err := c.ShouldBind(&$1); err != nil {",
+      "\tc.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})",
+      "\treturn",
+      "}"
+    ],
+    "description": "Bind request to struct"
+  },
+  
+  "XML Response": {
+    "prefix": "gin-xml",
+    "body": [
+      "c.XML(http.StatusOK, gin.H{\"message\": \"$1\"})"
+    ],
+    "description": "Send XML response"
+  },
+  
+  "File Download": {
+    "prefix": "gin-download",
+    "body": [
+      "c.File(\"./${1:path/to/file}\")"
+    ],
+    "description": "Send file as response"
+  },
+  
+  "Rate Limiting Middleware": {
+    "prefix": "gin-ratelimit",
+    "body": [
+      "func ${1:RateLimiter}(maxEventsPerSec int) gin.HandlerFunc {",
+      "\trate := ratelimit.Every(time.Second / time.Duration(maxEventsPerSec))",
+      "\tlimiter := ratelimit.New(rate)",
+      "\treturn func(c *gin.Context) {",
+      "\t\tif !limiter.Allow() {",
+      "\t\t\tc.AbortWithStatus(http.StatusTooManyRequests)",
+      "\t\t}",
+      "\t\tc.Next()",
+      "\t}",
+      "}"
+    ],
+    "description": "Rate limiting middleware"
+  },
+  
+  "Database Connection": {
+    "prefix": "gin-db",
+    "body": [
+      "func ${1:ConnectDB}() (*sql.DB, error) {",
+      "\tdb, err := sql.Open(\"${2:driver}\", \"${3:dsn}\")",
+      "\tif err != nil {",
+      "\t\treturn nil, err",
+      "\t}",
+      "\tif err := db.Ping(); err != nil {",
+      "\t\treturn nil, err",
+      "\t}",
+      "\treturn db, nil",
+      "}"
+    ],
+    "description": "Database connection helper"
+  },
+  
+  "Ping Endpoint": {
+    "prefix": "gin-ping",
+    "body": [
+      "router.GET(\"/ping\", func(c *gin.Context) {",
+      "\tc.String(http.StatusOK, \"pong\")",
+      "})"
+    ],
+    "description": "Health check endpoint"
+  },
+  
+  "Cookie Handling": {
+    "prefix": "gin-cookie",
+    "body": [
+      "// Set cookie",
+      "c.SetCookie(\"${1:name}\", \"${2:value}\", ${3:3600}, \"/\", \"${4:domain}\", ${5:false}, ${6:true})",
+      "",
+      "// Get cookie",
+      "cookie, _ := c.Cookie(\"$1\")"
+    ],
+    "description": "Cookie operations"
+  },
+  
+  "Abort Request": {
+    "prefix": "gin-abort",
+    "body": [
+      "c.AbortWithStatusJSON(http.Status${1:BadRequest}, gin.H{\"error\": \"${2:message}\"})"
+    ],
+    "description": "Abort request with error"
+  },
+  
+  "Async Handler": {
+    "prefix": "gin-async",
+    "body": [
+      "router.GET(\"/$1\", func(c *gin.Context) {",
+      "\tcCp := c.Copy()",
+      "\tgo func() {",
+      "\t\ttime.Sleep(5 * time.Second)",
+      "\t\tlog.Println(\"Async task completed for:\", cCp.Request.URL.Path)",
+      "\t}()",
+      "\tc.JSON(http.StatusOK, gin.H{\"status\": \"processing\"})",
+      "})"
+    ],
+    "description": "Asynchronous request handler"
+  },
+  
+  "No Route Handler": {
+    "prefix": "gin-noroute",
+    "body": [
+      "router.NoRoute(func(c *gin.Context) {",
+      "\tc.JSON(http.StatusNotFound, gin.H{\"error\": \"Not found\"})",
+      "})"
+    ],
+    "description": "404 handler"
+  },
+  
+  "Server-Sent Events": {
+    "prefix": "gin-sse",
+    "body": [
+      "router.GET(\"/events\", func(c *gin.Context) {",
+      "\tc.Header(\"Content-Type\", \"text/event-stream\")",
+      "\tc.Header(\"Cache-Control\", \"no-cache\")",
+      "\tc.Header(\"Connection\", \"keep-alive\")",
+      "",
+      "\tmessageChan := make(chan string)",
+      "\tgo func() {",
+      "\t\tfor {",
+      "\t\t\ttime.Sleep(1 * time.Second)",
+      "\t\t\tmessageChan <- fmt.Sprintf(\"data: %s\\n\\n\", time.Now().String())",
+      "\t\t}",
+      "\t}()",
+      "",
+      "\tc.Stream(func(w io.Writer) bool {",
+      "\t\tif msg, ok := <-messageChan; ok {",
+      "\t\t\tc.SSEvent(\"message\", msg)",
+      "\t\t\treturn true",
+      "\t\t}",
+      "\t\treturn false",
+      "\t})",
+      "})"
+    ],
+    "description": "Server-Sent Events handler"
+  },
+  
+  "WebSocket Handler": {
+    "prefix": "gin-websocket",
+    "body": [
+      "router.GET(\"/ws\", func(c *gin.Context) {",
+      "\tws, err := upgrader.Upgrade(c.Writer, c.Request, nil)",
+      "\tif err != nil {",
+      "\t\tlog.Println(\"Upgrade error:\", err)",
+      "\t\treturn",
+      "\t}",
+      "\tdefer ws.Close()",
+      "",
+      "\tfor {",
+      "\t\tmt, message, err := ws.ReadMessage()",
+      "\t\tif err != nil {",
+      "\t\t\tlog.Println(\"Read error:\", err)",
+      "\t\t\tbreak",
+      "\t\t}",
+      "\t\tlog.Printf(\"Received: %s\", message)",
+      "\t\terr = ws.WriteMessage(mt, message)",
+      "\t\tif err != nil {",
+      "\t\t\tlog.Println(\"Write error:\", err)",
+      "\t\t\tbreak",
+      "\t\t}",
+      "\t}",
+      "})"
+    ],
+    "description": "WebSocket handler"
+  },
+  
+  "GZIP Compression": {
+    "prefix": "gin-gzip",
+    "body": [
+      "router.Use(gzip.Gzip(gzip.DefaultCompression))"
+    ],
+    "description": "GZIP compression middleware"
+  },
+  
+  "Secure Headers": {
+    "prefix": "gin-secure",
+    "body": [
+      "router.Use(secure.New(secure.Config{",
+      "\tFrameDeny: true,",
+      "\tContentTypeNosniff: true,",
+      "\tBrowserXssFilter: true,",
+      "\tSTSSeconds: 31536000,",
+      "}))"
+    ],
+    "description": "Security headers middleware"
+  },
+  
+  "Prometheus Metrics": {
+    "prefix": "gin-metrics",
+    "body": [
+      "p := ginprometheus.NewPrometheus(\"${1:app_name}\")",
+      "p.Use(router)"
+    ],
+    "description": "Prometheus metrics integration"
+  },
+  
+  "Custom Context": {
+    "prefix": "gin-customctx",
+    "body": [
+      "type ${1:CustomContext} struct {",
+      "\t*gin.Context",
+      "}",
+      "",
+      "func (c *$1) ${2:CustomMethod}() {",
+      "\t// Custom logic here",
+      "}",
+      "",
+      "router.Use(func(ctx *gin.Context) {",
+      "\tcc := &$1{ctx}",
+      "\tcc.Next()",
+      "})"
+    ],
+    "description": "Custom context extension"
+  },
+  
+  "Bind Query String": {
+    "prefix": "gin-bindquery",
+    "body": [
+      "var query ${1:YourStruct}",
+      "if err := c.ShouldBindQuery(&query); err != nil {",
+      "\tc.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})",
+      "\treturn",
+      "}"
+    ],
+    "description": "Bind query parameters to struct"
+  },
+  
+  "HTTP/2 Server Push": {
+    "prefix": "gin-http2",
+    "body": [
+      "if pusher := c.Writer.Pusher(); pusher != nil {",
+      "\tif err := pusher.Push(\"$1\", nil); err != nil {",
+      "\t\tlog.Printf(\"Push failed: %v\", err)",
+      "\t}",
+      "}"
+    ],
+    "description": "HTTP/2 server push"
+  },
+  
+  "Custom Log Format": {
+    "prefix": "gin-logformat",
+    "body": [
+      "router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {",
+      "\treturn fmt.Sprintf(\"%s - [%s] \\\"%s %s %s %d %s\\\" %s\\n\",",
+      "\t\tparam.ClientIP,",
+      "\t\tparam.TimeStamp.Format(time.RFC1123),",
+      "\t\tparam.Method,",
+      "\t\tparam.Path,",
+      "\t\tparam.Request.Proto,",
+      "\t\tparam.StatusCode,",
+      "\t\tparam.Latency,",
+      "\t\tparam.ErrorMessage,",
+      "\t)",
+      "}))"
+    ],
+    "description": "Custom log format"
+  },
+  
+  "Recovery Middleware": {
+    "prefix": "gin-recovery",
+    "body": [
+      "router.Use(gin.CustomRecovery(func(c *gin.Context, recovered any) {",
+      "\tif err, ok := recovered.(string); ok {",
+      "\t\tc.String(http.StatusInternalServerError, fmt.Sprintf(\"error: %s\", err))",
+      "\t}",
+      "\tc.AbortWithStatus(http.StatusInternalServerError)",
+      "}))"
+    ],
+    "description": "Custom recovery middleware"
+  },
+  
+  "Bind Header": {
+    "prefix": "gin-bindheader",
+    "body": [
+      "var h ${1:HeaderStruct}",
+      "if err := c.ShouldBindHeader(&h); err != nil {",
+      "\tc.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})",
+      "\treturn",
+      "}"
+    ],
+    "description": "Bind headers to struct"
+  },
+  
+  "Custom HTTP Method": {
+    "prefix": "gin-httpmethod",
+    "body": [
+      "router.Handle(\"${1:CUSTOM}\", \"/$2\", func(c *gin.Context) {",
+      "\tc.JSON(http.StatusOK, gin.H{\"message\": \"custom method\"})",
+      "})"
+    ],
+    "description": "Custom HTTP method handler"
+  },
+  
+  "No Method Handler": {
+    "prefix": "gin-nomethod",
+    "body": [
+      "router.NoMethod(func(c *gin.Context) {",
+      "\tc.JSON(http.StatusMethodNotAllowed, gin.H{\"error\": \"Method not allowed\"})",
+      "})"
+    ],
+    "description": "405 method not allowed handler"
+  },
+  
+  "Form Binding": {
+    "prefix": "gin-form",
+    "body": [
+      "var form ${1:FormStruct}",
+      "if err := c.ShouldBind(&form); err != nil {",
+      "\tc.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})",
+      "\treturn",
+      "}"
+    ],
+    "description": "Bind form data"
+  },
+  
+  "URI Binding": {
+    "prefix": "gin-uri",
+    "body": [
+      "var uri ${1:UriStruct}",
+      "if err := c.ShouldBindUri(&uri); err != nil {",
+      "\tc.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})",
+      "\treturn",
+      "}"
+    ],
+    "description": "Bind URI parameters"
+  },
+  
+  "YAML Response": {
+    "prefix": "gin-yaml",
+    "body": [
+      "c.YAML(http.StatusOK, gin.H{\"message\": \"$1\"})"
+    ],
+    "description": "Send YAML response"
+  },
+  
+  "Cache Control": {
+    "prefix": "gin-cache",
+    "body": [
+      "router.Use(func(c *gin.Context) {",
+      "\tc.Writer.Header().Set(\"Cache-Control\", \"public, max-age=${1:3600}\")",
+      "\tc.Next()",
+      "})"
+    ],
+    "description": "Cache control middleware"
+  },
+  
+  "Request ID": {
+    "prefix": "gin-requestid",
+    "body": [
+      "router.Use(func(c *gin.Context) {",
+      "\tc.Writer.Header().Set(\"X-Request-ID\", uuid.New().String())",
+      "\tc.Next()",
+      "})"
+    ],
+    "description": "Add request ID header"
+  },
+  
+  "Database Transaction Middleware": {
+    "prefix": "gin-tx",
+    "body": [
+      "func ${1:TransactionMiddleware}(db *sql.DB) gin.HandlerFunc {",
+      "\treturn func(c *gin.Context) {",
+      "\t\ttx, err := db.Begin()",
+      "\t\tif err != nil {",
+      "\t\t\tc.AbortWithStatus(http.StatusInternalServerError)",
+      "\t\t\treturn",
+      "\t\t}",
+      "\t\tc.Set(\"${2:tx}\", tx)",
+      "\t\tc.Next()",
+      "\t\tif c.Writer.Status() >= 400 {",
+      "\t\t\ttx.Rollback()",
+      "\t\t} else {",
+      "\t\t\ttx.Commit()",
+      "\t\t}",
+      "\t}",
+      "}"
+    ],
+    "description": "Database transaction middleware"
+  },
+  
+  "Custom Binding": {
+    "prefix": "gin-custombind",
+    "body": [
+      "type ${1:CustomData} struct {",
+      "\t${2:Field} string `form:\"$3\" json:\"$4\" binding:\"$5\"`",
+      "}",
+      "",
+      "func (s *$1) Bind(c *gin.Context) error {",
+      "\treturn c.ShouldBind(s)",
+      "}"
+    ],
+    "description": "Custom binding implementation"
+  },
+  
+  "String Response": {
+    "prefix": "gin-string",
+    "body": [
+      "c.String(http.StatusOK, \"$1\")"
+    ],
+    "description": "Send string response"
+  },
+  
+  "Byte Response": {
+    "prefix": "gin-data",
+    "body": [
+      "c.Data(http.StatusOK, \"${1:text/plain}\", []byte(\"$2\"))"
+    ],
+    "description": "Send byte array response"
+  }
+}
